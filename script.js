@@ -774,3 +774,26 @@ const bebidasApp = {
         cartApp.addItem(name, price, img, desc, document.getElementById('add-bebida-btn'));
     }
 };
+
+// Function to handle olive selection logic
+function selectOliveType(btn, pizzaIdx, type) {
+    const container = document.querySelector(`.olive-selector-container[data-pizza-id="${pizzaIdx}"]`);
+    if (!container) return;
+
+    // Remove selected state from all chips in this container
+    const chips = container.querySelectorAll('.olive-chip');
+    chips.forEach(chip => {
+        chip.classList.remove('selected', 'bg-red-50', 'border-red-500', 'text-red-700');
+        chip.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-600');
+    });
+
+    // Add selected state to the clicked chip
+    btn.classList.add('selected', 'bg-red-50', 'border-red-500', 'text-red-700');
+    btn.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-600');
+
+    // Hide error message if it was shown
+    const errorMsg = document.getElementById(`olive-error-${pizzaIdx}`);
+    if (errorMsg) {
+        errorMsg.classList.add('hidden');
+    }
+}
