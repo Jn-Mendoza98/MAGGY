@@ -825,3 +825,54 @@ function selectOliveType(btn, pizzaIdx, type) {
         errorMsg.classList.add('hidden');
     }
 }
+
+
+function selectPizzaSize(btn, pizzaIdx) {
+    const buttons = document.querySelectorAll(`button[data-pizza-id="${pizzaIdx}"]`);
+    buttons.forEach(b => {
+        b.className = "size-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 relative border-2 border-transparent w-full bg-gray-50 text-gray-500 hover:bg-gray-100";
+        b.classList.remove('selected-size');
+    });
+
+    btn.className = "size-btn flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 relative border-2 border-transparent w-full bg-gradient-to-br from-primary to-red-700 shadow-[0_4px_12px_rgba(230,33,23,0.3)] text-white scale-[1.02] selected-size";
+
+    const addBtn = document.getElementById(`add-btn-${pizzaIdx}`);
+    if (addBtn) {
+        if (pizzaIdx === '4') {
+            const isPersonal = btn.innerText.includes('PERSONAL');
+            if (typeof vegApp !== 'undefined') {
+                vegApp.updateLimit(isPersonal ? 4 : 6, btn);
+                addBtn.setAttribute("onclick", `vegApp.addToCart('${pizzaIdx}')`);
+            }
+        } else {
+            addBtn.setAttribute("onclick", `addPizzaToCart('${pizzaIdx}')`);
+        }
+    }
+}
+
+function addPizzaToCart(pizzaIdx) {
+    const sizeBtn = document.querySelector(`button[data-pizza-id="${pizzaIdx}"].selected-size`);
+    if (!sizeBtn) {
+        alert('Seleccione un tamaño antes de agregar al carrito');
+        return;
+    }
+
+    const name = sizeBtn.getAttribute('data-name');
+    const price = parseFloat(sizeBtn.getAttribute('data-price'));
+    const img = sizeBtn.getAttribute('data-img');
+    let finalName = name;
+
+    const oliveContainer = document.querySelector(`.olive-selector-container[data-pizza-id="${pizzaIdx}"]`);
+    if (oliveContainer) {
+        const selectedOlive = oliveContainer.querySelector('.olive-chip.selected');
+        if (!selectedOlive) {
+            document.getElementById(`olive-error-${pizzaIdx}`).classList.remove('hidden');
+            return;
+        }
+        document.getElementById(`olive-error-${pizzaIdx}`).classList.add('hidden');
+        const oliveType = selectedOlive.getAttribute('data-type');
+        finalName += ` (Aceitunas ${oliveType})`;
+    }
+
+    cartApp.addItem(finalName, price, img);
+}
