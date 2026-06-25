@@ -129,21 +129,16 @@ const vegApp = {
         });
     },
 
-    addToCart() {
-        if (!this.state.currentCall) {
+    addToCart(pizzaIdx = '4') {
+        const sizeBtn = document.querySelector(`button[data-pizza-id="${pizzaIdx}"].selected-size`);
+        if (!sizeBtn) {
             alert("Seleccione un tamaño antes de agregar al carrito");
             return;
         }
-        // We need to execute the currentCall but override the description.
-        // currentCall is something like: cartApp.addItem('Vegetariana (Personal)', 18.00, 'https://...')
 
-        // Parse it
-        const match = this.state.currentCall.match(/cartApp\.addItem\('([^']+)',\s*([\d.]+),\s*'([^']+)'\)/);
-        if (!match) return;
-
-        const name = match[1];
-        const price = match[2];
-        const img = match[3];
+        const name = sizeBtn.getAttribute('data-name');
+        const price = parseFloat(sizeBtn.getAttribute('data-price'));
+        const img = sizeBtn.getAttribute('data-img');
 
         let desc = 'Ingredientes predeterminados';
         if (this.state.selected.length > 0) {
@@ -363,6 +358,39 @@ const cartApp = {
 
         container.innerHTML = html;
         totalEl.innerText = `S/ ${total.toFixed(2)}`;
+    },
+
+    checkout() {
+        if (this.state.items.length === 0) {
+            alert("Tu carrito está vacío.");
+            return;
+        }
+
+        let message = "Hola Chez Maggy, me gustaría hacer el siguiente pedido:\n\n";
+        let total = 0;
+
+        this.state.items.forEach(item => {
+            const itemTotal = item.price * item.qty;
+            total += itemTotal;
+            message += `- ${item.qty}x ${item.name} (S/ ${itemTotal.toFixed(2)})\n`;
+            if (item.desc) {
+                message += `  Detalles: ${item.desc}\n`;
+            }
+        });
+
+        message += `\nTotal a pagar: S/ ${total.toFixed(2)}`;
+
+        // Numero de WhatsApp proporcionado, si no hay usar un placeholder.
+        // Asumiendo +51 para Perú (Chiclayo) ya que el HTML menciona (074) 123 456 y "Chiclayo".
+        // El user no especificó el número exacto, pondremos el que está en el footer o uno generico si no hay.
+        // Let's use standard +51 999 999 999 or check footer. Footer has "(074) 123 456". Let's just use "51999999999" as a placeholder that the user can replace later.
+        // Or wait, can I prompt the user for the number? The user asked "puedes colocar un número de wsp". Let's just use "51999999999".
+
+        const phoneNumber = "51999999999";
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
     }
 };
 
@@ -774,3 +802,26 @@ const bebidasApp = {
         cartApp.addItem(name, price, img, desc, document.getElementById('add-bebida-btn'));
     }
 };
+
+// Function to handle olive selection logic
+function selectOliveType(btn, pizzaIdx, type) {
+    const container = document.querySelector(`.olive-selector-container[data-pizza-id="${pizzaIdx}"]`);
+    if (!container) return;
+
+    // Remove selected state from all chips in this container
+    const chips = container.querySelectorAll('.olive-chip');
+    chips.forEach(chip => {
+        chip.classList.remove('selected', 'bg-red-50', 'border-red-500', 'text-red-700');
+        chip.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-600');
+    });
+
+    // Add selected state to the clicked chip
+    btn.classList.add('selected', 'bg-red-50', 'border-red-500', 'text-red-700');
+    btn.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-600');
+
+    // Hide error message if it was shown
+    const errorMsg = document.getElementById(`olive-error-${pizzaIdx}`);
+    if (errorMsg) {
+        errorMsg.classList.add('hidden');
+    }
+}
